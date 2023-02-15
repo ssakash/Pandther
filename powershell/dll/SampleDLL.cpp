@@ -1,31 +1,21 @@
 #include <Windows.h>
-#include <iostream>
 
-// Declare the function pointer for the add function
-typedef int (*AddFunction)(int, int);
-
-int main()
+// Export the add function
+extern "C" __declspec(dllexport) int add(int a, int b)
 {
-    // Load the DLL
-    HMODULE hDll = LoadLibrary("mydll.dll");
-    if (hDll == NULL) {
-        std::cerr << "Failed to load DLL\n";
-        return 1;
+    return a + b;
+}
+
+// Entry point for the DLL
+BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved)
+{
+    switch (ul_reason_for_call)
+    {
+    case DLL_PROCESS_ATTACH:
+    case DLL_THREAD_ATTACH:
+    case DLL_THREAD_DETACH:
+    case DLL_PROCESS_DETACH:
+        break;
     }
-
-    // Get the address of the add function
-    AddFunction add = (AddFunction)GetProcAddress(hDll, "add");
-    if (add == NULL) {
-        std::cerr << "Failed to get address of add function\n";
-        return 1;
-    }
-
-    // Call the add function
-    int result = add(2, 3);
-    std::cout << "Result: " << result << "\n";
-
-    // Unload the DLL
-    FreeLibrary(hDll);
-
-    return 0;
+    return TRUE;
 }
