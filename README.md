@@ -3,4 +3,4 @@
 
 Commands: (From base directory)
 
-1/ For scraping links from URL: python scraper/scrapurls.py "Link with https://"
+1/ python Pandther.py <endpoint>
