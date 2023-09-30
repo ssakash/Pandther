@@ -1,54 +1,53 @@
-import sys
 import requests
-from bs4 import BeautifulSoup
-import urllib.parse
+import sys
 
-def print_title():
-     print("="*50)
-     print("               Pandther                   ")
-     print("="*50)
-     print("\n\n")
+def load_wordlist(file_path):
+    try:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            wordlist = [line.strip() for line in file]
+        return wordlist
+    except FileNotFoundError:
+        print(f"File not found: {file_path}")
+        return []
+    except IOError:
+        print(f"Error reading file: {file_path}")
+        return []
 
-def print_header(x):
-    print("="*50)
-    print(f"Operations to perform on ({x})")
-    print("="*50)
-    print("1/ Display links in endpoint")
-    print("2/ Links")
-    print("="*50)
+def send_options_request(url):
+    try:
+        apis_found = []
+        w = load_wordlist("api_wordlist.txt")
+        for i in w:
+            fuzzurl = url+"/"+ i
+            response = requests.options(fuzzurl, timeout=5)
+            print(f"Status code: {response.status_code}, URL: {fuzzurl} ", )
 
-# List of all reference list in the provided URL
-def fetch_links(url):
-    response = requests.get(url)
-    if response.status_code != 200:
-        return 'Failed to get the webpage.'
+            if response.status_code == 200:
+                if 'Allow' in response.headers:
+                    print("Allowed methods: ", response.headers['Allow'])
+                    apis_found.append(fuzzurl)
+                else:
+                    print("No 'Allow' header in the response")
 
-    web_content = response.text
-    soup = BeautifulSoup(web_content, 'html.parser')
+    except requests.RequestException as e:
+        print("An error occurred: ", str(e))
 
-    links = soup.find_all('a')
-    url_list = []
+    return apis_found
 
-    for link in links:
-        href = link.get('href')
-        if href:
-            parsed = urllib.parse.urljoin(url, href)
-            url_list.append(parsed)
+def main():
+    if len(sys.argv) != 3:
+        print("Commands: ")
+        print("1/ python3 Pandther.py recon <url>")
+        sys.exit(1)
 
-    return url_list
+    action = sys.argv[1]
+    url = sys.argv[2]
+    
+    if not url.startswith("http://") and not url.startswith("https://"):
+        print("Invalid URL. Please ensure it starts with 'http://' or 'https://'")
+        sys.exit(1)
+    if(action == "recon"):
+        print(f"Valid APIs found are: {send_options_request(url)}")
 
-
-#The main input in our script is primarily an endpoint. (https://endpoint.com) and we do all processing in it.
-endpoint = sys.argv[1]
-
-print_title()
-selection = "c"
-while (selection != 'q' and selection != 'Q'):
-    print_header(endpoint)
-
-    selection = input("Your choice? (Press Q to quit)")
-    if( selection == "1"):
-        links = fetch_links(endpoint)
-        print("Links present in the endpoint are:")
-        for i in links:
-            print(i)
+if __name__ == "__main__":
+    main()
