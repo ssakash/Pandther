@@ -1,6 +1,11 @@
 import requests
 import sys
+import logging
 
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s - %(levelname)s - %(message)s',
+                    filename='debug_log.txt',
+                    filemode='w')
 def load_wordlist(file_path):
     try:
         with open(file_path, 'r', encoding='utf-8') as file:
@@ -23,6 +28,7 @@ def send_options_request(url):
             print(f"Status code: {response.status_code}, URL: {fuzzurl} ", )
 
             if response.status_code == 200:
+                logging.info(response.text)
                 if 'Allow' in response.headers:
                     print("Allowed methods: ", response.headers['Allow'])
                     apis_found.append(fuzzurl)
@@ -48,6 +54,8 @@ def main():
         sys.exit(1)
     if(action == "recon"):
         print(f"Valid APIs found are: {send_options_request(url)}")
+    else:
+        print(f"Provide valid command. '{action}' isn't one!")
 
 if __name__ == "__main__":
     main()
